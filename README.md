@@ -21,11 +21,22 @@ Subdosec is not just a fast and accurate subdomain takeover scanner with no fals
 
 # Installation
 
-To install, ensure that Node.js is already installed on your machine, and then simply run the following command:
-``python3 -m pip install git+https://github.com/xcapri/subdosec.git``. 
-If there is an update, you can run the same command by adding the ``--upgrade`` argument.
+Requiretment :
+To install, ensure that Node.js is already installed on your machine.
+```
+node -v
+v18.+++
+```
 
-Then run this every time you start a new terminal session.
+And then simply run the following command:
+```
+python3 -m pip install git+https://github.com/xcapri/subdosec.git
+or 
+python3 -m pip install --upgrade git+https://github.com/xcapri/subdosec.git
+```
+
+
+Then run this every time you start a new terminal session (until “server started successfully”).
 
 ```
 $ subdosec -ins
@@ -72,12 +83,14 @@ options:
   -ins                  Prepar node & start server
   -lf LF                Fingerprint lock: to focus on one or multiple fingerprints. (-lf github.io,surge.sh) and leave this arg to scan all fingerprints
   -sfid                 To view all available fingerprint ids.
+  -o                    Save result locally to the specified path. Example: -o /path/to/dir
 ```
 
 Every subdomain takeover scan will default to the public dashboard https://subdosec.vulnshot.com/scan#vulnlist, so the following commands can be used:
 ## Default scan 
 - ``cat list_subdomain | subdosec``, This command will display the UNDETECT & VULN scan output with the output publicly saved to the subdosec web as a database of vulnerable sites.
 - ``cat list_root_domain | subfinder -silent | httpx -silent | subdosec``, you can also scan subdomains from the subfinder results directly.
+- ``cat list_root_domain | subfinder -silent | httpx -silent | subdosec | notify``, You can also add other commands to throw the output to telegram, slack, dc with notify.
 ## Private scan 
 You need to create an account here: https://subdosec.vulnshot.com/signup. Simply use your email, and you will be given a Subdosec env file containing your password and API key. Use the API key to initialize the tool with the command:
 
