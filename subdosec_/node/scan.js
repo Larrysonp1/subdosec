@@ -37,7 +37,8 @@ app.post('/local/scan', async (req, res) => {
 
         const response_body_base64 = body_fu;
 
-
+        console.log(cname_records);
+        
         const websiteData = new WebsiteData_cli(
             response_body_base64,
             title_fu,

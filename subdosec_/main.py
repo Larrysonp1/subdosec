@@ -49,7 +49,6 @@ def run_node_server():
         except subprocess.TimeoutExpired:
             print("Node.js server did not start within the expected time. It may still be running.")
 
-        # Exit the Python script
         sys.exit(0)
 
     except FileNotFoundError as fnf_error:
@@ -121,7 +120,6 @@ async def undetect_site(siteinfo, apikey, host_scan_prod, mode):
         async with session.post(url, headers=headers, json=payload) as response:
            return await response.json()
         
-
 async def vuln_site(siteinfo, fingerprint_id, apikey, host_scan_prod, mode):
     """Notify the server about undetected sites."""
     url = host_scan_prod.replace('/api/scan/cli', '/api/vuln/stored/cli')
@@ -136,7 +134,25 @@ async def vuln_site(siteinfo, fingerprint_id, apikey, host_scan_prod, mode):
         async with session.post(url, headers=headers, json=payload) as response:
            return await response.json()
 
-def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, fingerprints, vuln_only, pe):
+async def save_local(w, fs, fid, o):
+
+    save_path = os.path.join(o)
+    
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    file_name = f"{fs}_tko.txt"
+    file_path = os.path.join(save_path, file_name)
+    
+    subdomain = w.get('subdomain', None)
+
+    if subdomain:
+        with open(file_path, 'a') as file:
+            file.write(subdomain + '\n')
+    else:
+        print(f"No subdomain found in data.")
+
+def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, fingerprints, vuln_only, pe, o):
     """Analyze a single target and print the results."""
 
     try:
@@ -177,9 +193,10 @@ def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod,
             service = next(item.get('service').get('service') for item in match_response if item.get('isMatched'))
             web_data = next(item.get('website_data') for item in match_response if item.get('isMatched'))
             fingerprint_id = next(item.get('service').get('fid') for item in match_response if item.get('isMatched'))
-
-            print(f" [VULN] {output_scan}{service}")
-            asyncio.run(vuln_site(web_data, fingerprint_id, apikey, host_scan_prod, mode))
+            
+            action = save_local if o else vuln_site
+            print(f" [VULN] {'[SAVED]' if o else f'{output_scan}{service}'}")
+            asyncio.run(action(web_data, fingerprint_id, apikey if not o else o, host_scan_prod, mode))
 
         elif not vuln_only:
             print(f" [UNDETECT]")
@@ -203,7 +220,7 @@ def check_fingerprint():
     except Exception as e:
         print(f"[Error] : {e}")
 
-def scan_by_web(mode, vuln_only, pe, lf):
+def scan_by_web(mode, vuln_only, pe, lf, o):
     """Main function to perform the web scanning."""
     try:
         apikey, output_scan, host_scan, host_scan_prod = load_env_vars(mode)
@@ -224,7 +241,7 @@ def scan_by_web(mode, vuln_only, pe, lf):
         targets = [line.strip() for line in sys.stdin]
 
         for target in targets:
-            analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, final_finger, vuln_only, pe)
+            analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, final_finger, vuln_only, pe, o)
 
     except ValueError as e:
         print(f"[Configuration Error] {e}")
@@ -241,6 +258,8 @@ def main():
     parser.add_argument('-ins', action='store_true', help='Prepar node & start server')
     parser.add_argument('-lf', default='all',  help='Fingerprint lock: to focus on one or multiple fingerprints. (-lf github.io,surge.sh) and leave this arg to scan all fingerprints')
     parser.add_argument('-sfid', action='store_true',  help='To view all available fingerprint ids.')
+    parser.add_argument('-o', type=str, help='Save result locally to the specified path. Example: -o /path/to/dir')
+
     
     args = parser.parse_args()
 
@@ -252,7 +271,7 @@ def main():
     elif args.sfid:
         check_fingerprint()
     else:
-        scan_by_web(args.mode, args.vo, args.pe, args.lf)
+        scan_by_web(args.mode, args.vo, args.pe, args.lf,  args.o)
 
 if __name__ == "__main__":
     main()
