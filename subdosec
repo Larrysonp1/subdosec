@@ -194,10 +194,14 @@ def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod,
             web_data = next(item.get('website_data') for item in match_response if item.get('isMatched'))
             fingerprint_id = next(item.get('service').get('fid') for item in match_response if item.get('isMatched'))
             
-            action = save_local if o else vuln_site
-            print(f" [VULN] {'[SAVED]' if o else f'{output_scan}{service}'}")
-            asyncio.run(action(web_data, fingerprint_id, apikey if not o else o, host_scan_prod, mode))
+            msg = " [VULN] [SAVED]" if o else f" [VULN] {output_scan}{service}"
+            print(msg)
 
+            if o:
+                asyncio.run(save_local(web_data, service, fingerprint_id, o))
+            else:
+                asyncio.run(vuln_site(web_data, fingerprint_id, apikey, host_scan_prod, mode))
+                            
         elif not vuln_only:
             print(f" [UNDETECT]")
             asyncio.run(undetect_site(match_response[0], apikey, host_scan_prod, mode))
