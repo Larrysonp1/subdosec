@@ -112,6 +112,8 @@ For example, you search for a site that is not detected as vulnerable by subdose
 
 After that you analyze it turns out that the service is vulnerable to subdomain takeover. then you can send the fingerprint information to us via telgram channel [Subdosec Group](https://t.me/subdosec).
 
+Or via [New Discussion](https://github.com/xcapri/subdosec/discussions/new?category=ideas)
+
 Dynamically you can use this element for rules ``title, cname, status_code, in_body, a_record, redirect``:
 
 ```
