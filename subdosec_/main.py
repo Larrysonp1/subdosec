@@ -24,7 +24,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def run_node_server():
     """Start the Node.js server in the background, supporting both Windows and Linux, without displaying output, and then terminate the Python script."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    node_dir = os.path.join(script_dir, 'subdosec_/node')
+    node_dir = os.path.join(script_dir, 'node')
     js_loc = os.path.join(node_dir, 'scan.js')
     node_modules_dir = os.path.join(node_dir, 'node_modules')
 
@@ -65,7 +65,7 @@ def run_node_server():
 def init_key(apikey):
     """Initialize the API key in the .env file."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    env_file = os.path.join(script_dir, 'subdosec_/config/.env')
+    env_file = os.path.join(script_dir, 'config/.env')
     
     load_dotenv(dotenv_path=env_file)
     set_key(env_file, 'APIKEY', apikey)
@@ -74,7 +74,7 @@ def init_key(apikey):
 def load_env_vars(mode):
     """Load environment variables based on the mode."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    env_file = os.path.join(script_dir, 'subdosec_/config/.env')
+    env_file = os.path.join(script_dir, 'config/.env')
 
     load_dotenv(dotenv_path=env_file)
 
