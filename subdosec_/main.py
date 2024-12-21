@@ -6,7 +6,6 @@ import json
 import base64
 import argparse
 import requests
-from requests.exceptions import RequestException, HTTPError, ConnectionError
 from dotenv import load_dotenv, set_key
 from bs4 import BeautifulSoup
 import urllib3
@@ -14,8 +13,8 @@ import aiohttp
 import asyncio
 import pyfiglet
 import subprocess
-import threading
 import platform
+from requests.exceptions import SSLError
 
 # Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -152,14 +151,32 @@ async def save_local(w, fs, fid, o):
     else:
         print(f"No subdomain found in data.")
 
-def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, fingerprints, vuln_only, pe, o):
-    """Analyze a single target and print the results."""
-
+def autos_protocol(target):
     try:
         response = requests.get(target, verify=False, allow_redirects=True, timeout=30)
         if len(response.history) > 2:
             raise Exception(f"Too many redirects for {target}, skipping...")
+        return response
 
+    except SSLError as e:
+        if '[SSL: TLSV1_ALERT_INTERNAL_ERROR]' in str(e):
+            
+            http_target = target.replace("https://", "http://")
+            try:
+                response = requests.get(http_target, verify=False, allow_redirects=False, timeout=30)
+                return response
+
+            except Exception as e:
+                print(f"[Error] HTTP request failed: {e}")
+                return None
+        else:
+            raise e
+
+def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, fingerprints, vuln_only, pe, o):
+    """Analyze a single target and print the results."""
+
+    try:
+        response = autos_protocol(target)
         title = extract_title(response.text)
         status_code = response.history[0].status_code if response.history else response.status_code
         redirect_url = response.url if response.history else 'No redirects'
@@ -194,7 +211,7 @@ def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod,
             web_data = next(item.get('website_data') for item in match_response if item.get('isMatched'))
             fingerprint_id = next(item.get('service').get('fid') for item in match_response if item.get('isMatched'))
             
-            msg = " [VULN] [SAVED]" if o else f" [VULN] {output_scan}{service}"
+            msg = f" [{service}] [VULN] [SAVED]" if o else f" [VULN] {output_scan}{service}"
             print(msg)
 
             if o:
