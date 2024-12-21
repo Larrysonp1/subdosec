@@ -24,7 +24,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def run_node_server():
     """Start the Node.js server in the background, supporting both Windows and Linux, without displaying output, and then terminate the Python script."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    node_dir = os.path.join(script_dir, 'node')
+    node_dir = os.path.join(script_dir, 'subdosec_/node')
     js_loc = os.path.join(node_dir, 'scan.js')
     node_modules_dir = os.path.join(node_dir, 'node_modules')
 
@@ -65,7 +65,7 @@ def run_node_server():
 def init_key(apikey):
     """Initialize the API key in the .env file."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    env_file = os.path.join(script_dir, 'config/.env')
+    env_file = os.path.join(script_dir, 'subdosec_/config/.env')
     
     load_dotenv(dotenv_path=env_file)
     set_key(env_file, 'APIKEY', apikey)
@@ -74,7 +74,7 @@ def init_key(apikey):
 def load_env_vars(mode):
     """Load environment variables based on the mode."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    env_file = os.path.join(script_dir, 'config/.env')
+    env_file = os.path.join(script_dir, 'subdosec_/config/.env')
 
     load_dotenv(dotenv_path=env_file)
 
@@ -224,7 +224,19 @@ def check_fingerprint():
     except Exception as e:
         print(f"[Error] : {e}")
 
-def scan_by_web(mode, vuln_only, pe, lf, o):
+def read_local_finger(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            data = json.load(file) 
+            return data
+    except FileNotFoundError:
+        print(f"Error: The file at {file_path} was not found.")
+        return None
+    except json.JSONDecodeError:
+        print(f"Error: The file at {file_path} is not a valid JSON file.")
+        return None
+
+def scan_by_web(mode, vuln_only, pe, lf, o, pf):
     """Main function to perform the web scanning."""
     try:
         apikey, output_scan, host_scan, host_scan_prod = load_env_vars(mode)
@@ -239,7 +251,7 @@ def scan_by_web(mode, vuln_only, pe, lf, o):
             ]
         }
 
-        final_finger = filtered_fingerprints if lf != 'all' else fingerprints
+        final_finger = read_local_finger(pf) if pf else (filtered_fingerprints if lf != 'all' else fingerprints)
 
 
         targets = [line.strip() for line in sys.stdin]
@@ -260,6 +272,7 @@ def main():
     parser.add_argument('-vo', action='store_true', help='VULN Only: Hide UNDETECT messages')
     parser.add_argument('-pe', action='store_true', help='Print Error: When there are problems detecting your target')
     parser.add_argument('-ins', action='store_true', help='Prepar node & start server')
+    parser.add_argument('-pf', type=str,  help='Private Fingerprint: uses your local fingerprint. Example: -pf /path/to/tko.json')
     parser.add_argument('-lf', default='all',  help='Fingerprint lock: to focus on one or multiple fingerprints. (-lf github.io,surge.sh) and leave this arg to scan all fingerprints')
     parser.add_argument('-sfid', action='store_true',  help='To view all available fingerprint ids.')
     parser.add_argument('-o', type=str, help='Save result locally to the specified path. Example: -o /path/to/dir')
@@ -272,10 +285,13 @@ def main():
         init_key(args.initkey)
     elif args.ins:
         run_node_server()
+    elif args.pf and not args.o:
+        print("Error: If you use -pf, you must save the scan to local with -o /path/to/save")
+        sys.exit(1)
     elif args.sfid:
         check_fingerprint()
     else:
-        scan_by_web(args.mode, args.vo, args.pe, args.lf,  args.o)
+        scan_by_web(args.mode, args.vo, args.pe, args.lf,  args.o,  args.pf)
 
 if __name__ == "__main__":
     main()

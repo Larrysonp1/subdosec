@@ -82,6 +82,7 @@ options:
   -pe                   Print Error: When there are problems detecting your target
   -ins                  Prepar node & start server
   -lf LF                Fingerprint lock: to focus on one or multiple fingerprints. (-lf github.io,surge.sh) and leave this arg to scan all fingerprints
+  -pf                   Private Fingerprint: uses your local fingerprint. Example: -pf /path/to/tko.json
   -sfid                 To view all available fingerprint ids.
   -o                    Save result locally to the specified path. Example: -o /path/to/dir
 ```
