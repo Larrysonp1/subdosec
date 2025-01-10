@@ -59,6 +59,11 @@ _Do not takeover all subdomains in test.txt,_
 let everyone use that for demos.
 </b>
 
+<b>[INFO]
+_Also check the [Release](https://github.com/xcapri/subdosec/releases) section._
+You can find interesting info.
+</b>
+
 ```
 $ subdosec -h
  ____        _         _

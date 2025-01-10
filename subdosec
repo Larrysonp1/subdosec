@@ -236,7 +236,8 @@ def check_fingerprint():
         for fingerprint in fingerprints['fingerprints']:
             service = fingerprint['service']
             name = fingerprint['name']
-            print(f"{service} | {name}")
+            status = "[False Positive]" if fingerprint['status_fingerprint'] == 1 else "[Active]"
+            print(f"{service} | {name} {status}")
 
     except Exception as e:
         print(f"[Error] : {e}")
@@ -258,18 +259,17 @@ def scan_by_web(mode, vuln_only, pe, lf, o, pf):
     try:
         apikey, output_scan, host_scan, host_scan_prod = load_env_vars(mode)
         fingerprints = fetch_fingerprints(host_scan_prod)
-
+        filtered_fingerprints = {'fingerprints': [fingerprint for fingerprint in fingerprints['fingerprints'] if fingerprint['status_fingerprint'] != 1]} 
         lf_list = [x.strip() for x in lf.split(',')]
         
-        filtered_fingerprints = {
+        lock_filtered_fingerprints = {
             "fingerprints": [
                 fingerprint for fingerprint in fingerprints['fingerprints']
                 if fingerprint['service'] in lf_list
             ]
         }
 
-        final_finger = read_local_finger(pf) if pf else (filtered_fingerprints if lf != 'all' else fingerprints)
-
+        final_finger = read_local_finger(pf) if pf else (lock_filtered_fingerprints if lf != 'all' else filtered_fingerprints)
 
         targets = [line.strip() for line in sys.stdin]
 
@@ -278,7 +278,6 @@ def scan_by_web(mode, vuln_only, pe, lf, o, pf):
 
     except ValueError as e:
         print(f"[Configuration Error] {e}")
-
 
 def main():
     """Entry point for the script."""
