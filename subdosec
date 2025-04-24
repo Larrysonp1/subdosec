@@ -15,16 +15,37 @@ import pyfiglet
 import subprocess
 import platform
 from requests.exceptions import SSLError
-
+import socket
+import random
+import time
 # Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+def is_port_in_use(port):
+    """Check if the given port is currently in use on localhost."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
+def get_random_unused_port():
+    """Find a random unused port."""
+    while True:
+        port = random.randint(1024, 65535)
+        if not is_port_in_use(port):
+            return port
+        
 def run_node_server():
+    """Initialize the API key in the .env file."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    env_file = os.path.join(script_dir, 'subdosec_/config/.env')
+    load_dotenv(dotenv_path=env_file)
+
+    node_port = os.getenv('PORT') 
+
     """Start the Node.js server in the background, supporting both Windows and Linux, without displaying output, and then terminate the Python script."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     node_dir = os.path.join(script_dir, 'subdosec_/node')
-    js_loc = os.path.join(node_dir, 'scan.js')
+    js_loc = os.path.join(node_dir, 'scan.js') 
     node_modules_dir = os.path.join(node_dir, 'node_modules')
 
     npm_path = 'npm.cmd' if platform.system() == 'Windows' else 'npm'
@@ -40,15 +61,29 @@ def run_node_server():
             subprocess.run([npm_path, 'i'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
             print("Node.js modules installed.")
 
-        print("Starting Node.js server...")
-        process = subprocess.Popen(['node', js_loc], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        try:
-            process.communicate(timeout=10)
-            print("Node.js server started successfully.")
-        except subprocess.TimeoutExpired:
-            print("Node.js server did not start within the expected time. It may still be running.")
+            if is_port_in_use(int(node_port)):
+                print(f"[Info] Port {node_port} is already in use. Server may already be running.")
+                random_port_unused = get_random_unused_port()
+                set_key(env_file, 'PORT', str(random_port_unused))
+                print(f"[Info] Switching to available port: {random_port_unused}")
+                load_dotenv(dotenv_path=env_file, override=True)
+                node_port = os.getenv('PORT')
 
-        sys.exit(0)
+        print("Starting Node.js server...")
+        env = os.environ.copy()
+        env["PORT"] = node_port
+        print(env["PORT"])
+        # Launch the Node.js server with the updated environment
+        process = subprocess.Popen(['node', js_loc], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
+
+        for _ in range(30): 
+            if is_port_in_use(int(node_port)):
+                print("Node.js server started (running in background).")
+                sys.exit(0)
+            time.sleep(1)
+
+        print("Node.js server did not respond within the expected time.")
+        sys.exit(1)
 
     except FileNotFoundError as fnf_error:
         print(f"[Error] {fnf_error}")
@@ -278,6 +313,7 @@ def scan_by_web(mode, vuln_only, pe, lf, o, pf):
 
     except ValueError as e:
         print(f"[Configuration Error] {e}")
+
 
 def main():
     """Entry point for the script."""
