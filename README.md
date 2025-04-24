@@ -30,9 +30,9 @@ v18.+++
 
 And then simply run the following command:
 ```
-python3 -m pip install git+https://github.com/xcapri/subdosec.git
-or 
-python3 -m pip install --upgrade git+https://github.com/xcapri/subdosec.git
+python3 -m pip install git+https://github.com/xcapri/subdosec.git --break-system-packages
+or this if you want upgrade :
+python3 -m pip install --upgrade git+https://github.com/xcapri/subdosec.git --break-system-packages
 ```
 
 

@@ -72,7 +72,6 @@ def run_node_server():
         print("Starting Node.js server...")
         env = os.environ.copy()
         env["PORT"] = node_port
-        print(env["PORT"])
         # Launch the Node.js server with the updated environment
         process = subprocess.Popen(['node', js_loc], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
 
@@ -114,7 +113,7 @@ def load_env_vars(mode):
 
     apikey = os.getenv('APIKEY') if mode == 'private' else os.getenv('PUBLIC_API_KEY')
     output_scan = os.getenv('OUTPUT_SCAN_PRIV') if mode == 'private' else os.getenv('OUTPUT_SCAN_PUB')
-    host_scan = os.getenv('SCAN_API_HOST')
+    host_scan = os.getenv('SCAN_API_HOST').replace('3000', os.getenv('PORT'))
     host_scan_prod = os.getenv('PROD_SCAN_API_HOST')
 
     if not all([host_scan, output_scan]):
