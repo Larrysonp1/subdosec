@@ -294,17 +294,33 @@ def check_fingerprint():
     except Exception as e:
         print(f"[Error] : {e}")
 
-def read_local_finger(file_path):
+def read_local_finger(file_path, host_scan_prod):
+    cache_finger = fetch_fingerprints(host_scan_prod)
+    cache_list = cache_finger.get("fingerprints", [])
+
     try:
         with open(file_path, 'r') as file:
-            data = json.load(file) 
-            return data
+            local_data = json.load(file)
+            local_list = local_data.get("fingerprints", [])
+
+            max_fid = max([item["fid"] for item in cache_list], default=0)
+            existing_fids = {item["fid"] for item in cache_list}
+
+            for item in local_list:
+                if item["fid"] in existing_fids:
+                    max_fid += 1 
+                    item["fid"] = max_fid
+                cache_list.append(item)
+
+            return {"fingerprints": cache_list}
+
     except FileNotFoundError:
-        print(f"Error: The file at {file_path} was not found.")
-        return None
+        print(f"Error: The file at {file_path} was not found. Try using fingerprint form server.")
+        return cache_finger
     except json.JSONDecodeError:
-        print(f"Error: The file at {file_path} is not a valid JSON file.")
-        return None
+        print(f"Error: The file at {file_path} is not a valid JSON file. Try using fingerprint form server.")
+        return cache_finger
+
 
 def scan_by_web(mode, vuln_only, pe, lf, o, pf):
     """Main function to perform the web scanning."""
@@ -321,7 +337,7 @@ def scan_by_web(mode, vuln_only, pe, lf, o, pf):
             ]
         }
 
-        final_finger = read_local_finger(pf) if pf else (lock_filtered_fingerprints if lf != 'all' else filtered_fingerprints)
+        final_finger = read_local_finger(pf, host_scan_prod) if pf else (lock_filtered_fingerprints if lf != 'all' else filtered_fingerprints)
 
         targets = [line.strip() for line in sys.stdin]
 
