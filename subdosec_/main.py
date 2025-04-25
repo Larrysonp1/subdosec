@@ -18,6 +18,8 @@ from requests.exceptions import SSLError
 import socket
 import random
 import time
+import psutil
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -34,13 +36,24 @@ def get_random_unused_port():
             return port
 
 def kill_server():
-        pass
+    _, _, _, _, node_port = load_env_vars('public')
+    node_port = int(node_port)
+
+    for conn in psutil.net_connections(kind='inet'):
+        if conn.status == psutil.CONN_LISTEN and conn.laddr.port == node_port:
+            try:
+                proc = psutil.Process(conn.pid)
+                print(f"[+] Killing process {conn.pid} on port {node_port} ({proc.name()})")
+                proc.kill()
+            except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+                print(f"[-] Could not kill process {conn.pid}: {e}")
+
 def run_node_server():
     """Initialize the API key in the .env file."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     env_file = os.path.join(script_dir, 'config/.env')
 
-    apikey, output_scan, host_scan, host_scan_prod, node_port = load_env_vars('public')
+    _, _, _, host_scan_prod, node_port = load_env_vars('public')
 
     ## Stored Fingerprint To Local
     fetch_fingerprints(host_scan_prod)
