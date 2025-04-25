@@ -88,8 +88,9 @@ options:
   -ins                  Prepar node & start server
   -lf LF                Fingerprint lock: to focus on one or multiple fingerprints. (-lf github.io,surge.sh) and leave this arg to scan all fingerprints
   -pf                   Private Fingerprint: uses your local fingerprint. Example: -pf /path/to/tko.json
-  -sfid                 To view all available fingerprint ids.
+  -sfid                 To view all available fingerprint ids
   -o                    Save result locally to the specified path. Example: -o /path/to/dir
+  -ks                   To shut down the server node if you want to not use subdosec for a long time
 ```
 
 Every subdomain takeover scan will default to the public dashboard https://subdosec.vulnshot.com/scan#vulnlist, so the following commands can be used:
