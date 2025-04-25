@@ -6,7 +6,7 @@ setup(
     author='xcapri',
     author_email='N/A',
     url='https://github.com/xcapri/subdosec',
-    version='0.9',
+    version='0.10',
     package_data={"subdosec_": ["config/*"]},
     include_package_data=True,
     packages=find_packages(),
@@ -16,7 +16,8 @@ setup(
         'beautifulsoup4',
         'urllib3',
         'aiohttp',
-        'pyfiglet'
+        'pyfiglet',
+        'psutil'
     ],
     entry_points={
         'console_scripts': [
