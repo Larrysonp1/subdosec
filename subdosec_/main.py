@@ -217,6 +217,7 @@ async def save_local(w, fs, fid, o):
 
 def autos_protocol(target):
     try:
+
         response = requests.get(target, verify=False, allow_redirects=True, timeout=30)
         if len(response.history) > 2:
             raise Exception(f"Too many redirects for {target}, skipping...")
@@ -238,10 +239,12 @@ def autos_protocol(target):
 
 def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, fingerprints, vuln_only, pe, o):
     """Analyze a single target and print the results."""
-
     try:
+        target = target if target.startswith(('http://', 'https://')) else 'https://' + target
+
         response = autos_protocol(target)
         title = extract_title(response.text)
+
         status_code = response.history[0].status_code if response.history else response.status_code
         redirect_url = response.url if response.history else 'No redirects'
 
