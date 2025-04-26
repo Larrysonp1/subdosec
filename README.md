@@ -117,6 +117,13 @@ http://creators.thinkorion.com [100.00%] [UNDETECT]
 https://a.anchorsawaytpt.com [100.00%] [UNDETECT]
 https://help.oceges.com [100.00%] [UNDETECT]
 ```
+OR using root domain 
+```
+cat list
+example.com 
+
+cat list | subfinder -silent | subdosec -su -o savevuln 
+```
 
 ```
 └─$ ls savevuln/
