@@ -185,7 +185,6 @@ async def undetect_site(siteinfo, apikey, host_scan_prod, mode):
 
 async def undetect_site_localy(siteinfo, path):
     siteinfo['website_data'].pop('response_body_base64', None)
-    print(siteinfo.get('website_data'))
 
     if not os.path.exists(path):
         os.makedirs(path)

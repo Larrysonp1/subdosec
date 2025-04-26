@@ -96,12 +96,93 @@ options:
 
 ```
 
+## Recomend command (no signup required & not saved to server )
 
+- **Prepare list** (Support without protocol)
+```
+└─$ cat list 
+https://careers.rotacloud.com
+http://creators.thinkorion.com
+https://docs.polygon-nightfall.technology
+a.anchorsawaytpt.com
+help.oceges.com
+```
+
+- **Command#1** (Skip stored undetect to server & save localy)
+```
+└─$ cat list | subdosec -su -o savevuln
+
+https://careers.rotacloud.com [100.00%] [gohire.io] [VULN] [SAVED]
+http://creators.thinkorion.com [100.00%] [UNDETECT]
+https://a.anchorsawaytpt.com [100.00%] [UNDETECT]
+https://help.oceges.com [100.00%] [UNDETECT]
+```
+
+```
+└─$ ls savevuln/
+gohire.io_tko.txt
+
+└─$ cat savevuln/*
+careers.rotacloud.com
+```
+- **Command#2** (Forward result to notify)
+```
+└─$ cat list | subdosec -o savevuln -su -vo | notify -silent 
+
+https://careers.rotacloud.com [100.00%] [gohire.io] [VULN] [SAVED]
+
+```
+
+- **Command#3** (Stored undetec to local if you need for reconaise)
+```
+└─$ cat list | subdosec -o savevuln -lu saveundetect
+
+https://careers.rotacloud.com [100.00%] [gohire.io] [VULN] [SAVED]
+http://creators.thinkorion.com [100.00%] [UNDETECT]
+https://a.anchorsawaytpt.com [100.00%] [UNDETECT]
+```
+
+```
+└─$ ls saveundetect/
+undetect.json
+
+└─$ cat saveundetect/undetect.json
+[
+    {
+        "title": "creators.thinkorion.com Reviews on Testimonial.to",
+        "status_code": 301,
+        "redirect_url": "https://creators.thinkorion.com/",
+        "cname_records": [
+            "cname.testimonial.to"
+        ],
+        "a_records": [
+            "216.24.57.4",
+            "216.24.57.252"
+        ],
+        "subdomain": "creators.thinkorion.com",
+        "rootdomain": "thinkorion.com"
+    },
+    {
+        "title": "Subscribe to Get the New Feed Me, Lovely Cookbook",
+        "status_code": 200,
+        "redirect_url": "No redirects",
+        "cname_records": null,
+        "a_records": [
+            "3.13.222.255",
+            "3.130.60.26",
+            "3.13.246.91"
+        ],
+        "subdomain": "a.anchorsawaytpt.com",
+        "rootdomain": "anchorsawaytpt.com"
+    }
+]
+```
+------
 Every subdomain takeover scan will default to the public dashboard https://subdosec.vulnshot.com/scan#vulnlist, so the following commands can be used:
 ## Default scan 
 - ``cat list_subdomain | subdosec``, This command will display the UNDETECT & VULN scan output with the output publicly saved to the subdosec web as a database of vulnerable sites.
 - ``cat list_root_domain | subfinder -silent | httpx -silent | subdosec``, you can also scan subdomains from the subfinder results directly.
-- ``cat list_root_domain | subfinder -silent | httpx -silent | subdosec | notify``, You can also add other commands to throw the output to telegram, slack, dc with notify.
+- ``cat list_root_domain | subfinder -silent | httpx -silent | subdosec -vo | notify``, You can also add other commands to throw the output to telegram, slack, dc with notify.
 ## Private scan 
 You need to create an account here: https://subdosec.vulnshot.com/signup. Simply use your email, and you will be given a Subdosec env file containing your password and API key. Use the API key to initialize the tool with the command:
 

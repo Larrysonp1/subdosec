@@ -185,7 +185,6 @@ async def undetect_site(siteinfo, apikey, host_scan_prod, mode):
 
 async def undetect_site_localy(siteinfo, path):
     siteinfo['website_data'].pop('response_body_base64', None)
-    print(siteinfo.get('website_data'))
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -319,6 +318,7 @@ def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod,
                 asyncio.run(undetect_site_localy(match_response[0], lu))
             elif not su:
                 asyncio.run(undetect_site(match_response[0], apikey, host_scan_prod, mode))
+
 
     except Exception as e:
         if pe: print(f"[Error] {target} : {e}")
