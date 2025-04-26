@@ -182,7 +182,33 @@ async def undetect_site(siteinfo, apikey, host_scan_prod, mode):
     async with aiohttp.ClientSession() as session:
         async with session.post(url, headers=headers, json=payload) as response:
            return await response.json()
-        
+
+async def undetect_site_localy(siteinfo, path):
+    siteinfo['website_data'].pop('response_body_base64', None)
+    print(siteinfo.get('website_data'))
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    file_path = os.path.join(path, "undetect.json")
+
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    data = []
+            except json.JSONDecodeError:
+                data = []
+    else:
+        data = []
+
+    data.append(siteinfo['website_data'])
+
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=4)
+
+
 async def vuln_site(siteinfo, fingerprint_id, apikey, host_scan_prod, mode):
     """Notify the server about undetected sites."""
     url = host_scan_prod.replace('/api/scan/cli', '/api/vuln/stored/cli')
@@ -237,7 +263,7 @@ def autos_protocol(target):
         else:
             raise e
 
-def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, fingerprints, vuln_only, pe, o):
+def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, fingerprints, vuln_only, pe, o, su, lu):
     """Analyze a single target and print the results."""
     try:
         target = target if target.startswith(('http://', 'https://')) else 'https://' + target
@@ -286,18 +312,21 @@ def analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod,
             else:
                 asyncio.run(vuln_site(web_data, fingerprint_id, apikey, host_scan_prod, mode))
 
+
         elif not vuln_only:
-            print(f" [UNDETECT]")
-            asyncio.run(undetect_site(match_response[0], apikey, host_scan_prod, mode))
-        else:
-            pass 
+            print(" [UNDETECT]")
+            if lu:
+                asyncio.run(undetect_site_localy(match_response[0], lu))
+            elif not su:
+                asyncio.run(undetect_site(match_response[0], apikey, host_scan_prod, mode))
+
 
     except Exception as e:
         if pe: print(f"[Error] {target} : {e}")
 
 def check_fingerprint():
     try:
-        apikey, output_scan, host_scan, host_scan_prod, node_port = load_env_vars('public')
+        _, _, _, host_scan_prod, _ = load_env_vars('public')
         fingerprints = fetch_fingerprints(host_scan_prod)
         
         for fingerprint in fingerprints['fingerprints']:
@@ -337,10 +366,10 @@ def read_local_finger(file_path, host_scan_prod):
         return cache_finger
 
 
-def scan_by_web(mode, vuln_only, pe, lf, o, pf):
+def scan_by_web(mode, vuln_only, pe, lf, o, pf, su, lu):
     """Main function to perform the web scanning."""
     try:
-        apikey, output_scan, host_scan, host_scan_prod, node_port = load_env_vars(mode)
+        apikey, output_scan, host_scan, host_scan_prod, _ = load_env_vars(mode)
         fingerprints = fetch_fingerprints(host_scan_prod)
         filtered_fingerprints = {'fingerprints': [fingerprint for fingerprint in fingerprints['fingerprints'] if fingerprint['status_fingerprint'] != 1]} 
         lf_list = [x.strip() for x in lf.split(',')]
@@ -357,7 +386,7 @@ def scan_by_web(mode, vuln_only, pe, lf, o, pf):
         targets = [line.strip() for line in sys.stdin]
 
         for target in targets:
-            analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, final_finger, vuln_only, pe, o)
+            analyze_target(target, mode, apikey, output_scan, host_scan, host_scan_prod, final_finger, vuln_only, pe, o, su, lu)
 
     except ValueError as e:
         print(f"[Configuration Error] {e}")
@@ -377,6 +406,8 @@ def main():
     parser.add_argument('-sfid', action='store_true',  help='To view all available fingerprint ids.')
     parser.add_argument('-ks', action='store_true',  help='To shut down the server node if you want to not use subdosec for a long time.')
     parser.add_argument('-o', type=str, help='Save result locally to the specified path. Example: -o /path/to/dir')
+    parser.add_argument('-su', action='store_true', help='Skip undetect will not stored to server (https://subdosec.vulnshot.com/result/undetected)')
+    parser.add_argument('-lu', type=str, help='Undetec stored localy to the specified path. Example: -lu /path/to/dir')
 
     
     args = parser.parse_args()
@@ -394,7 +425,7 @@ def main():
     elif args.ks:
         kill_server()
     else:
-        scan_by_web(args.mode, args.vo, args.pe, args.lf,  args.o,  args.pf)
+        scan_by_web(args.mode, args.vo, args.pe, args.lf,  args.o,  args.pf, args.su, args.lu)
 
 if __name__ == "__main__":
     main()
