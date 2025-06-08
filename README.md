@@ -93,6 +93,7 @@ options:
   -su                   Skip undetect will not stored to server (https://subdosec.vulnshot.com/result/undetected)
   -lu                   Undetec stored localy to the specified path. Example: -lu /path/to/dir
   -ks                   To shut down the server node if you want to not use subdosec for a long time
+  -uf                   To update fingerprint in localfingerprint
 
 ```
 
